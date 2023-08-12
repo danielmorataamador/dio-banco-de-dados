@@ -1,165 +1,145 @@
-CREATE DATABASE IF NOT EXISTS Oficina;
-USE Oficina;
+CREATE DATABASE Ecommerce;
+USE Ecommerce;
 
-DROP DATABASE Oficina;
-
--- VEICULO
-CREATE TABLE Veiculo(
-	idVeiculo INT auto_increment PRIMARY KEY,
-    idRevisão INT,
-    Placa CHAR(7) NOT NULL,
-    CONSTRAINT placa_idVeiculo UNIQUE (idVeiculo, Placa)
-);
-
-ALTER TABLE Veiculo ADD CONSTRAINT fk_eqp_mecanicos FOREIGN KEY (idVeiculo) REFERENCES EqpMecanico(idEqpMecanico),
-ADD CONSTRAINT fk_conserto FOREIGN KEY (idVeiculo) REFERENCES Conserto(idConserto),
-ADD CONSTRAINT fk_revisao FOREIGN KEY (idRevisão) REFERENCES Revisao(idRevisão);
-
-DESC Veiculo;
-
--- CLIENTES
-CREATE TABLE Clientes(
-	idClientes INT auto_increment PRIMARY KEY,
-    idVeiculo INT,
-    CONSTRAINT fk_veiculo FOREIGN KEY (idVeiculo) REFERENCES Veiculo(idVeiculo)
-);
-
-DESC Clientes;
-
--- PESSOA FISICA
-CREATE TABLE PessoaFisica(
-	idPessoaFisica INT auto_increment PRIMARY KEY,
-    Nome VARCHAR(45) NOT NULL,
-    CPF CHAR(11) NOT NULL,
+-- CLIENTE
+CREATE TABLE Cliente(
+	idCliente INT auto_increment PRIMARY KEY,
+    Nome VARCHAR(45),
     Endereço VARCHAR(45),
-    Contato CHAR(11)
-);
+	CPF CHAR (11) NOT NULL,
+    CNPJ VARCHAR(18),
+    CONSTRAINT unique_cpf_cliente UNIQUE (CPF),
+    CONSTRAINT unique_cnpj_cliente UNIQUE (CNPJ)
+    );
 
-ALTER TABLE PessoaFisica ADD CONSTRAINT unique_cpf_PessoaFisica UNIQUE (CPF);
+DESC Cliente;
 
-ALTER TABLE PessoaFisica ADD CONSTRAINT fk_idClientes_pf FOREIGN KEY (idPessoaFisica) REFERENCES Clientes(idClientes),
-ADD CONSTRAINT fk_clinte_pf FOREIGN KEY (idClientePf) REFERENCES Clientes(idClientes),
-ADD CONSTRAINT fk_veiculo_pf FOREIGN KEY (idPessoaFisica) REFERENCES Veiculo(idVeiculo);
-
-DESC PessoaFisica;
-
--- PESSOA JURIDICA
-CREATE TABLE PessoaJuridica(
-	idPessoaJuridica INT auto_increment PRIMARY KEY,
-    RazaoSocial VARCHAR(45) NOT NULL,
-    CNPJ CHAR(15) NOT NULL,
-    Endereço VARCHAR(45),
-    Contato CHAR(11),
-    CONSTRAINT unique_cnpj_PessoaJuridica UNIQUE (CNPJ)
-);
-
-ALTER TABLE PessoaJuridica ADD CONSTRAINT fk_clientes_pj FOREIGN KEY (idPessoaJuridica) REFERENCES Clientes(idClientes),
-ADD CONSTRAINT fk_veiculo_pj FOREIGN KEY (idPessoaJuridica) REFERENCES Veiculo(idVeiculo);
-
-DESC PessoaJuridica;
-
--- CONSERTO
-CREATE TABLE Conserto(
-	idConserto INT auto_increment PRIMARY KEY,
-    Descrição VARCHAR(45) NOT NULL
-);
-
-DESC Conserto;
-
--- REVISÃO
-CREATE TABLE Revisão(
-	idRevisão INT auto_increment PRIMARY KEY,
-    Descrição VARCHAR(45) NOT NULL
-);
-
-DESC Revisão;
-
--- MECANICO
-CREATE TABLE Mecanico(
-	idMecanico INT auto_increment PRIMARY KEY,
-    Nome VARCHAR(45) NOT NULL,
-    Endereço VARCHAR(45) NOT NULL,
-    Especialidade VARCHAR(45) NOT NULL
-);
-
-DESC Mecanico;
-
--- EQUIPE MECÂNICOS
-CREATE TABLE EqpMecanicos(
-	idEqpMecanicos INT auto_increment PRIMARY KEY
-);
-
-ALTER TABLE EqpMecanicos ADD CONSTRAINT fk_Mecanico FOREIGN KEY (idEqpMecanicos) REFERENCES Mecanico(idMecanico);
-ALTER TABLE OdServiço ADD CONSTRAINT fk_OdServiço FOREIGN KEY (idOdServiço) REFERENCES OdServiço(idOdServiço);
-
-DESC EqpMecanicos;
-
--- ORDEM DE SERVIÇO
-CREATE TABLE OdServiço(
-	idOdServiço INT auto_increment PRIMARY KEY,
-    DataEmissão DATE,
-    ValorServiço FLOAT NOT NULL,
-    ValorPeça FLOAT NOT NULL,
-    ValorTotal FLOAT NOT NULL,
-    Status ENUM('AGUARDANDO', 'EM ANDAMENTO', 'CONCLUIDO', 'CANCELADO'),
-    DataConclusão DATE
-);
-
-SELECT * FROM OdServiço ORDER BY DataEmissão;
-SELECT * FROM OdServiço ORDER BY ValorTotal;
-DESC OdServiço;
-
--- REFERENCIA DE PREÇOS
-CREATE TABLE ReferenciaPreços(
-	idReferenciaPreços INT auto_increment PRIMARY KEY,
-    CONSTRAINT fk_referencia_precos FOREIGN KEY (idReferenciaPreços) REFERENCES OdServiço(idOdServiço)
-);
-
-DESC ReferenciaPreços;
-
--- AUTORIZAÇÃO CLIENTE
-CREATE TABLE Autorização(
-	idAutorização INT auto_increment PRIMARY KEY,
-	Autorizado BOOL DEFAULT FALSE,
-    CONSTRAINT fk_autorização_cliente FOREIGN KEY (idAutorização) REFERENCES Clientes(idClientes),
-    CONSTRAINT fk_autorização_veiculo FOREIGN KEY (idAutorização) REFERENCES Veiculo(idVeiculo),
-    CONSTRAINT fk_autorização_OdServiço FOREIGN KEY (idAutorização) REFERENCES OdServiço(idOdServiço)
-);
-
-DESC Autorização;
-
--- PEÇAS
-CREATE TABLE Pecas(
-	idPecas INT auto_increment PRIMARY KEY,
+-- PRODUTO
+CREATE TABLE Produto(
+	idProduto INT auto_increment PRIMARY KEY,
+    Categoria VARCHAR(45),
     Descrição VARCHAR(45),
-    Valor FLOAT NOT NULL
+	Valor FLOAT
 );
 
-DESC Pecas;
+DESC Produto;
 
--- OS PEÇAS
-CREATE TABLE OsPecas(
-	idOsPecas INT auto_increment PRIMARY KEY,
-	CONSTRAINT fk_pecas FOREIGN KEY (idOsPecas) REFERENCES Pecas(idPecas),
-    CONSTRAINT fk_os_pecas FOREIGN KEY (idOsPecas) REFERENCES OdServiço(idOdServiço)
+-- PAGAMENTO
+CREATE TABLE Pagamento(
+	idPagamento INT auto_increment PRIMARY KEY,
+    PagamentoCliente INT,
+    Cartão VARCHAR(45),
+    Bandeira VARCHAR(45),
+    Número VARCHAR(45),
+    CONSTRAINT fk_pagamento_cliente FOREIGN KEY (PagamentoCliente) REFERENCES Cliente(idCliente)
 );
 
-DESC OsPecas;
+DESC Pagamento;
 
--- SERVIÇOS
-CREATE TABLE Serviços(
-	idServiços INT auto_increment PRIMARY KEY,
+-- ENTREGA
+CREATE TABLE Entrega(
+	idEntrega INT auto_increment PRIMARY KEY,
+    StatusEntrega BOOL,
+    CodigoRastreio VARCHAR(45),
+    DataEntrega DATE
+);
+
+DESC Entrega;
+
+-- PEDIDO
+CREATE TABLE Pedido(
+	idPedido INT auto_increment PRIMARY KEY,
+    StatusPedido BOOL DEFAULT FALSE,
+    Frete FLOAT,
     Descrição VARCHAR(45),
-    Valor FLOAT NOT NULL
+    CONSTRAINT fk_entrega FOREIGN KEY (idPedido) REFERENCES Entrega(idEntrega)
 );
 
-DESC Serviços;
+DESC Pedido;
 
--- ORDEM DE SERVIÇO
-CREATE TABLE OdServiço(
-	idOdServiço INT auto_increment PRIMARY KEY,
-    CONSTRAINT fk_serviços FOREIGN KEY (idOdServiço) REFERENCES Serviços(idServiços),
-    CONSTRAINT fk_os_serviços FOREIGN KEY (idOdServiço) REFERENCES OdServiço(idOdServiço)
+-- ESTOQUE
+CREATE TABLE Estoque(
+	idEstoque INT auto_increment PRIMARY KEY,
+    Local VARCHAR(45)
 );
 
-DESC OdServiço;
+DESC Estoque;
+
+-- PRODUTOS EM ETOQUE
+CREATE TABLE EstoqueProduto(
+	idProduto INT PRIMARY KEY,
+    idEstoqueProduto INT,
+    Quantidade FLOAT,
+    CONSTRAINT fk_estoque FOREIGN KEY (idProduto) REFERENCES Produto(idProduto),
+    CONSTRAINT fk_produto_estoque FOREIGN KEY (idEstoqueProduto) REFERENCES Estoque(idEstoque)
+);
+
+DESC EstoqueProduto;
+
+-- FORNECEDOR PRINCIPAL
+CREATE TABLE Fornecedor(
+	idFornecedor INT auto_increment PRIMARY KEY,
+    RazãoSocial VARCHAR(45),
+    CPF CHAR (11) NOT NULL,
+    CNPJ VARCHAR(18),
+    CONSTRAINT unique_cpf_cliente UNIQUE (CPF),
+    CONSTRAINT unique_cnpj_cliente UNIQUE (CNPJ)
+);
+
+DESC Fornecedor;
+
+-- FORNECEDOR TERCEIRO
+CREATE TABLE Terceiro(
+	idTerceiro INT auto_increment PRIMARY KEY,
+	RazãoSocial VARCHAR(45),
+    Localização VARCHAR(45),
+    CPF CHAR (11) NOT NULL,
+    CNPJ VARCHAR(18),
+    CONSTRAINT unique_cpf_cliente UNIQUE (CPF),
+    CONSTRAINT unique_cnpj_cliente UNIQUE (CNPJ)
+);
+
+DESC Terceiro;
+
+-- PEDIDO DE PRODUTO
+CREATE TABLE PedidoProduto(
+	idPedido INT,
+    idProduto INT,
+    Quantidade FLOAT DEFAULT 1,
+    CONSTRAINT fk_pedido FOREIGN KEY (idPedido) REFERENCES Terceiro(idTerceiro),
+    CONSTRAINT fk_produto FOREIGN KEY (idProduto) REFERENCES Produto(idProduto)
+);
+
+DESC PedidoProduto;
+
+-- PEDIDO DE PRODUTO PARA FORNECEDOR PRINCIPAL
+CREATE TABLE PedidoFornecedor(
+	idCompraFornecedor INT,
+    idFornecedorPedido INT,
+    Quantidade FLOAT DEFAULT 1,
+    CONSTRAINT fk_pedido_forncedor FOREIGN KEY (idCompraFornecedor) REFERENCES Fornecedor(idFornecedor),
+    CONSTRAINT fk_fornecedor_pedido FOREIGN KEY (idFornecedorPedido) REFERENCES Pedido(idPedido)
+);
+
+DESC PedidoFornecedor;
+
+-- PRODUTOS EM ESTOQUE FORNECEDOR PRINCIPAL (VERIFICA SE O FORNECEDOR TEM O PRODUTO QUE O CLIENTE DESEJA)
+CREATE TABLE EstoqueFornecedor(
+	idEstoqueFornecedor INT,
+    idProdutoFornecedor INT,
+    CONSTRAINT fk_estoque_fornecedor FOREIGN KEY (idEstoqueFornecedor) REFERENCES Fornecedor(idFornecedor),
+    CONSTRAINT fk_produtos_fornecedor FOREIGN KEY (idProdutoFornecedor) REFERENCES Produto(idProduto)
+);
+
+DESC EstoqueFornecedor;
+
+-- PRODUTOS EM ESTOQUE FORNECEDOR TERCEIRO (VERIFICA SE O FORNECEDOR TEM O PRODUTO QUE O CLIENTE DESEJA)
+
+CREATE TABLE EstoqueTerceiro(
+	idProdutosEstoque INT,
+    idPOFornecedor INT,
+    CONSTRAINT fk_produtos_estoque FOREIGN KEY (idProdutosEstoque) REFERENCES Produto(idProduto),
+    CONSTRAINT fk_po_fornecedor FOREIGN KEY (idPOFornecedor) REFERENCES Terceiro(idTerceiro)
+);
+
+DESC EstoqueTerceiro;
